@@ -1,0 +1,11 @@
+.venv/
+.idea/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+out/
+snapshots/
+*.csv
+src/*.egg-info/
+README.zip
