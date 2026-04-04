@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-from dataclasses import asdict
+from dataclasses import asdict, fields
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
@@ -112,8 +112,28 @@ def apply_site_check(row: LeadRow, *, timeout: float) -> LeadRow:
 
 def write_csv(rows: Iterable[LeadRow], output_path: Path) -> None:
     fieldnames = list(asdict(LeadRow(source="", query="", name="")).keys())
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
             writer.writerow(asdict(row))
+
+
+def read_csv(output_path: Path) -> list[LeadRow]:
+    if not output_path.exists():
+        return []
+
+    valid_fields = {field.name for field in fields(LeadRow)}
+    rows: list[LeadRow] = []
+    with output_path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for raw_row in reader:
+            row_data = {key: value for key, value in raw_row.items() if key in valid_fields}
+            if "lead_score" in row_data:
+                try:
+                    row_data["lead_score"] = int(row_data["lead_score"] or 0)
+                except ValueError:
+                    row_data["lead_score"] = 0
+            rows.append(LeadRow(**row_data))
+    return rows

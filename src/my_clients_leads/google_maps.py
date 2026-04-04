@@ -4,7 +4,7 @@ import json
 import logging
 import re
 from html import unescape
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import quote
 
 from .browser import collect_hrefs, first_locator_href, first_locator_text, import_playwright, scroll_results, try_click
@@ -147,7 +147,12 @@ def collect_google_result_urls(page: Any, *, browser_limit: int, scroll_steps: i
     return list(seen)[:browser_limit], locator_count
 
 
-def scrape_google_maps_queries(queries: list[str], *, options: BrowserOptions) -> list[LeadRow]:
+def scrape_google_maps_queries(
+    queries: list[str],
+    *,
+    options: BrowserOptions,
+    on_query_complete: Callable[[str, list[LeadRow]], None] | None = None,
+) -> list[LeadRow]:
     sync_playwright = import_playwright()
     rows: list[LeadRow] = []
     timeout_ms = int(options.timeout * 1000)
@@ -156,7 +161,10 @@ def scrape_google_maps_queries(queries: list[str], *, options: BrowserOptions) -
         context = browser.new_context(locale="en-US")
         page = context.new_page()
         try:
-            for query in queries:
+            total_queries = len(queries)
+            for index, query in enumerate(queries, start=1):
+                LOGGER.info("google progress %d/%d query='%s'", index, total_queries, query)
+                query_rows: list[LeadRow] = []
                 search_url = f"https://www.google.com/maps/search/{quote(query)}"
                 page.goto(search_url, wait_until="domcontentloaded", timeout=timeout_ms)
                 page.wait_for_timeout(3500)
@@ -184,7 +192,7 @@ def scrape_google_maps_queries(queries: list[str], *, options: BrowserOptions) -
                 for url in urls:
                     if options.result_delay_ms > 0:
                         page.wait_for_timeout(options.result_delay_ms)
-                    rows.append(
+                    query_rows.append(
                         scrape_google_maps_place(
                             context,
                             url,
@@ -193,6 +201,9 @@ def scrape_google_maps_queries(queries: list[str], *, options: BrowserOptions) -
                             snapshot_dir=options.snapshot_dir,
                         )
                     )
+                rows.extend(query_rows)
+                if on_query_complete:
+                    on_query_complete(query, query_rows)
         finally:
             context.close()
             browser.close()

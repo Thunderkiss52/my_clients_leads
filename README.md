@@ -24,6 +24,10 @@ bash 2_run_yandex.sh
 bash 3_run_google.sh
 ```
 
+Для большого сбора по Yandex скрипт сам открывает браузер. Если Yandex покажет `Вы не робот?`, просто пройди проверку вручную в окне, и сбор продолжится дальше.
+`2_run_yandex.sh` использует расширенный файл `queries_yerevan_1000.txt`, пишет сырой CSV в `out/yandex_1000_raw.csv` и сохраняет прогресс в `out/yandex_1000_raw.state.txt`, чтобы при повторном запуске продолжить с непройденных запросов.
+`3_run_google.sh` работает так же: использует `queries_google_1000.txt`, пишет в `out/google_1000_raw.csv` и продолжает по `out/google_1000_raw.state.txt`.
+
 ## Ручная установка
 
 ```bash

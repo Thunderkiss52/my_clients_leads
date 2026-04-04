@@ -59,3 +59,4 @@ class BrowserOptions:
     query_delay_ms: int = 0
     result_delay_ms: int = 0
     snapshot_dir: str = ""
+    detail_workers: int = 1

@@ -7,21 +7,28 @@ cd "$ROOT_DIR"
 bash "$ROOT_DIR/1_install.sh"
 source ".venv/bin/activate"
 
-OUTPUT_FILE="out/google_$(date +%Y-%m-%d_%H-%M-%S).csv"
+OUTPUT_FILE="out/google_1000_raw.csv"
+STATE_FILE="out/google_1000_raw.state.txt"
 
 python -m my_clients_leads \
   --google-maps \
-  --queries-file queries_google_yerevan.txt \
-  --browser-limit 60 \
-  --scroll-steps 35 \
-  --query-delay-ms 3000 \
-  --result-delay-ms 1800 \
+  --queries-file queries_google_1000.txt \
+  --browser-limit 30 \
+  --scroll-steps 18 \
+  --query-delay-ms 2000 \
+  --result-delay-ms 800 \
   --search-results 10 \
   --snapshot-dir snapshots \
+  --state-file "$STATE_FILE" \
   --output "$OUTPUT_FILE" \
+  --skip-search-fallback \
+  --skip-site-check \
+  --no-dedupe \
   --verbose \
   --headful
 
 echo
 echo "Готово. CSV сохранен сюда:"
 echo "  $OUTPUT_FILE"
+echo "Файл прогресса:"
+echo "  $STATE_FILE"
